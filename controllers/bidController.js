@@ -30,8 +30,18 @@ router.get('/new/:id', async (req,res)=>{
 //create bid
 router.post('/events/:id/', async (req,res)=>{
     try{
-        const createdBid = await Bids.create(req.body);
+        // find event first to get "bossId" for the new bid 
         const foundEvent = await Events.findById(req.params.id);
+
+
+        const newBid = req.body;
+        newBid.bidderId = req.session.userId;
+        newBid.bossId = foundEvent.hostId;
+
+        const createdBid = await Bids.create(newBid);
+
+        console.log("created Bid: ", createdBid);
+
         const currentUser = await Users.findById(req.session.userId);
         const currentServiceId = currentUser.services[0]._id;
         const currentService = await Services.findById(currentServiceId);
@@ -128,6 +138,112 @@ router.put('/:id', async (req, res)=>{
         console.log(err);
     }
 });
+
+
+// PATCH route -- change status of bid to/from accepted 
+router.patch('/:id', async (req, res)=>{
+
+        // req.body.accepted -- is either either yes or no
+
+        const update = {};
+
+    if (req.body.accepted === "yes") {
+        update.accepted = true;
+    } else {
+        update.accepted = false;
+    }
+            
+     try {
+        // most of this code copied from above and adapted slightly 
+        // update the bid to change only the updated acceptance status 
+        const thisBid = await Bids.findByIdAndUpdate(req.params.id, update, {new: true});
+
+        const foundService = await Services.findOne({'bids._id': req.params.id});
+        const boss = await Users.findById(req.session.userId);
+        const bidder = await Users.findById(thisBid.bidderId);
+        const foundEvent = await Events.findOne({'services._id': req.params.id});
+
+
+        // Need to update in the following places: 
+        // 1. service.bids in DB
+        // 2. event.services in DB 
+        // 3. user.events.services for the BOSS user -- update WITh updated event from 1, save 
+        // 4. user.services.bids on BIDDER user -- update WITH updated service.bids from 2, save 
+
+
+        // first, capture these NOW, before shit gets WEIRD: 
+        const foundEventIdString = foundEvent._id.toString();
+        const foundServiceIdString = foundService._id.toString();
+
+
+        // 1. service.bids in DB: 
+        const bidIndexOnFoundService = foundService.bids.findIndex((bid)=>{
+            if (bid._id.toString()===req.params.id) {
+                return true;
+            } else {
+                return false;
+            }
+        })
+
+        foundService.bids.splice(bidIndexOnFoundService, 1, thisBid);
+
+        const updatedFoundService = await foundService.save();
+        console.log("updated found service: ", updatedFoundService);
+
+
+        // 2. event.services in DB: 
+        const bidIndexOnFoundEvent = foundEvent.services.findIndex((bid)=>{
+            if (bid._id.toString()===req.params.id) {
+                return true;
+            } else {
+                return false;
+            }
+        })
+
+        foundEvent.services.splice(bidIndexOnFoundEvent, 1, thisBid);
+
+        const updatedFoundEvent = await foundEvent.save();
+        console.log("updated found event: ", updatedFoundEvent);
+
+
+        // 3. user.events.services for the BOSS user -- update WITh updated event from 1, save 
+        const bossEventsIndex = boss.events.findIndex((event)=>{
+            if (event._id.toString()===foundEventIdString) {
+                return true;
+            } else {
+                return false;
+            }
+        })
+
+        boss.events.splice(bossEventsIndex, 1, updatedFoundEvent);
+
+        const updatedBossUser = await boss.save();
+        console.log("updated boss User: ", updatedBossUser);
+
+
+        // 4. user.services.bids on BIDDER user -- update WITH updated service.bids from 2, save 
+        const bidderServiceIndex = bidder.services.findIndex((service)=>{
+            if (service._id.toString()===foundServiceIdString) {
+                return true;
+            } else {
+                return false;
+            }
+        })
+
+        bidder.services.splice(bidderServiceIndex, 1, updatedFoundService);
+
+        const updatedBidderUser = await bidder.save();
+        console.log("updated bidder User: ", updatedBidderUser);
+
+
+        // redirect to bid show page
+        res.redirect(`/bids/${req.params.id}`);
+    }catch(err){
+        res.send(err);
+        console.log(err);
+    }
+})
+
 
 router.delete('/:id', async (req,res)=>{
     try{

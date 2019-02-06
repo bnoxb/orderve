@@ -9,7 +9,7 @@ const userSchema = mongoose.Schema({
     lastname: String,
     email: String,
     events: [Events.schema],
-    services: [Services.schema],
+    services: [Services.schema], // only one for now, per user, at a time 
     zipCode: String,
     image: String
 });

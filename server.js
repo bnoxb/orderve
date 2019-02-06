@@ -1,5 +1,6 @@
+require('dotenv').config(); // IMPORTANT: This must come before you require your database! 
+
 require('./db/db');
-require('dotenv').config();
 const express               = require('express');
 const app                   = express();
 const morgan                = require('morgan');
@@ -30,7 +31,7 @@ const bidController         = require('./controllers/bidController');
 
 // session
 app.use(session({
-    secret: "THIS IS A RANDOM STRING SECRET",
+    secret: process.env.SESSION_SECRET,
     resave: true,
     saveUninitialized: true,
     cookie: {

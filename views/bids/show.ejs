@@ -22,11 +22,41 @@
             </div> 
             <div class="col-5">
                 <h2><%=bid.title%></h2>
-                
                 <h3 class="display-8">Bid Amount $$</h1>
                 <hr class="my-5">
                 <h1>$<%=bid.bidAmount%><h1>
                 <hr class="my-5">
+
+                <!-- display for user if user is bidder:  -->
+                <% if (currentUserId.toString()===bid.bidderId) { -%>
+                    <h3>Status: <% if (bid.accepted) { -%>
+                            Accepted
+                        <% } else { -%>
+                            Rejected
+                        <% } -%></h3>
+                <% }  -%>
+
+                <!-- display for user if user is boss: -->
+                <% if (currentUserId.toString()===bid.bossId) { -%>
+                    <h3>Status: <% if (bid.accepted) { -%>
+                        Accepted
+                    <% } else { -%>
+                        Rejected
+                    <% } -%></h3>
+                    <h4>Accept Bid: </h4>
+                    <form action="/bids/<%=bid._id%>?_method=PATCH" method="POST">
+                        <select name="accepted">
+                            <% if (bid.accepted) { -%>
+                                <option selected value="yes">Yes</option>
+                                <option value="no">No</option>
+                            <% } else { -%>
+                                <option value="yes">Yes</option>
+                                <option selected value="no">No</option>      
+                            <% } -%>
+                        </select>
+                        <button class="btn">Submit Change</button>
+                    </form>
+                <% } -%>
             </div>
             <div class="col-3">
                 <% if (currentSession.logged === true && (user._id.toString() === currentUserId.toString())) { %>

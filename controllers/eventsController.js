@@ -134,10 +134,14 @@ router.post('/', async (req, res) => {
     console.log(req.session);
     if(req.session.logged == true) {
         try {
-            const newEvent = await Events.create(req.body);
             const host = await Users.findById(req.session.userId)
+            const eventData = req.body;
+            eventData.hostId = host._id.toString();
+            const newEvent = await Events.create(eventData);
+
             host.events.push(newEvent);
-            host.save()
+            const updatedHost = await host.save();
+
             res.redirect('/events');
         } catch (err) {
             res.send(err)
