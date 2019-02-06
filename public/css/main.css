@@ -185,3 +185,50 @@ footer a {
 .event-show {
     margin-left: 30%;
 }
+
+
+/* ======= ABOUT PAGE ======= */
+
+/* NOTE: would want to do some media queries and change some of this styling 
+to make this friendly for mobile users */
+
+#about-page-main {
+    min-width: 650px;
+}
+
+
+#about-page {
+    margin-top: 30px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-around;
+    width: 100%;
+}
+
+#about-page a:hover {
+    text-decoration: underline;
+}
+
+/* About Orderve  */
+.left {
+    width: 60%;
+    max-width: 600px;
+}
+
+/* Sign up! + Testimonial, positive quote, tag line, etc */
+.right {
+    width: 30%;
+    max-width: 200px;
+}
+
+.rightBody > * {
+    margin-top: 30px;
+}
+
+.pullQuote {
+    border: solid black 1px;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+
